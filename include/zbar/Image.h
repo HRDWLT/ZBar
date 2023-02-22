@@ -33,7 +33,7 @@
 #include <assert.h>
 #include <iterator>
 #include "Symbol.h"
-#include "Exception.h"
+//#include "Exception.h"
 
 namespace zbar {
 
@@ -252,7 +252,8 @@ public:
         zbar_image_t *img = zbar_image_convert(_img, format);
         if(img)
             return(Image(img));
-        throw FormatError();
+        //throw FormatError();
+        return Image();
     }
 
     /// image format conversion.
@@ -275,7 +276,8 @@ public:
             zbar_image_convert_resize(_img, format, width, height);
         if(img)
             return(Image(img));
-        throw FormatError();
+        //throw FormatError();
+        return Image();
     }
 
     const SymbolSet get_symbols () const {
