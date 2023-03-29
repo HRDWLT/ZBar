@@ -35,5 +35,6 @@
 *.su
 *.depend
 *.kconfig
-
+*.xcuserdata
+*.xcuserdatad
 *.dep
