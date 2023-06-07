@@ -7,7 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef USE_ICONV
 #include <iconv.h>
+#endif
 #include "qrcode.h"
 #include "qrdec.h"
 #include "util.h"
@@ -32,7 +34,8 @@ static int text_is_latin1(const unsigned char *_text,int _len){
   return 1;
 }
 
-static void enc_list_mtf(iconv_t _enc_list[3],iconv_t _enc){
+#ifdef USE_ICONV
+static void enc_list_mtf(iconv_t _enc_list[3], iconv_t _enc) {
   int i;
   for(i=0;i<3;i++)if(_enc_list[i]==_enc){
     int j;
@@ -41,14 +44,17 @@ static void enc_list_mtf(iconv_t _enc_list[3],iconv_t _enc){
     break;
   }
 }
+#endif
 
 int qr_code_data_list_extract_text(const qr_code_data_list *_qrlist,
                                    zbar_image_scanner_t *iscn,
                                    zbar_image_t *img)
 {
+#ifdef USE_ICONV
   iconv_t              sjis_cd;
   iconv_t              utf8_cd;
   iconv_t              latin1_cd;
+#endif
   const qr_code_data  *qrdata;
   int                  nqrdata;
   unsigned char       *mark;
@@ -58,17 +64,21 @@ int qr_code_data_list_extract_text(const qr_code_data_list *_qrlist,
   nqrdata=_qrlist->nqrdata;
   mark=(unsigned char *)calloc(nqrdata,sizeof(*mark));
   ntext=0;
+#ifdef USE_ICONV
   /*This is the encoding the standard says is the default.*/
   latin1_cd=iconv_open("UTF-8","ISO8859-1");
   /*But this one is often used, as well.*/
   sjis_cd=iconv_open("UTF-8","SJIS");
   /*This is a trivial conversion just to check validity without extra code.*/
   utf8_cd=iconv_open("UTF-8","UTF-8");
+#endif
   for(i=0;i<nqrdata;i++)if(!mark[i]){
     const qr_code_data       *qrdataj;
     const qr_code_data_entry *entry;
+#ifdef USE_ICONV
     iconv_t                   enc_list[3];
     iconv_t                   eci_cd;
+#endif
     int                       sa[16];
     int                       sa_size;
     char                     *sa_text;
@@ -160,10 +170,12 @@ int qr_code_data_list_extract_text(const qr_code_data_list *_qrlist,
       else sa_text[sa_ntext++]=(char)(fnc1_2ai-100);
     }
     eci=-1;
+#ifdef USE_ICONV
     enc_list[0]=sjis_cd;
     enc_list[1]=latin1_cd;
     enc_list[2]=utf8_cd;
     eci_cd=(iconv_t)-1;
+#endif
     err=0;
     for(j = 0; j < sa_size && !err; j++, sym = &(*sym)->next) {
       *sym = _zbar_image_scanner_alloc_sym(iscn, ZBAR_QRCODE, 0);
@@ -256,6 +268,7 @@ int qr_code_data_list_extract_text(const qr_code_data_list *_qrlist,
             It requires copying buffers around to handle correctly.*/
           case QR_MODE_BYTE:
           case QR_MODE_KANJI:{
+#ifdef USE_ICONV
             in=(char *)entry->payload.data.buf;
             inleft=entry->payload.data.len;
             out=sa_text+sa_ntext;
@@ -331,6 +344,7 @@ int qr_code_data_list_extract_text(const qr_code_data_list *_qrlist,
                iconv(eci_cd,&in,&inleft,&out,&outleft)==(size_t)-1;
               if(!err)sa_ntext=out-sa_text;
             }
+#endif
           }break;
           /*Check to see if a character set was specified.*/
           case QR_MODE_ECI:{
@@ -353,7 +367,9 @@ int qr_code_data_list_extract_text(const qr_code_data_list *_qrlist,
                we recognize.*/
             else continue;
             eci=cur_eci;
+#ifdef USE_ICONV
             eci_cd=iconv_open("UTF-8",enc);
+#endif
           }break;
           /*Silence stupid compiler warnings.*/
           default:break;
@@ -362,10 +378,14 @@ int qr_code_data_list_extract_text(const qr_code_data_list *_qrlist,
       /*If eci should be reset between codes, do so.*/
       if(eci<=QR_ECI_GLI1){
         eci=-1;
+#ifdef USE_ICONV
         if(eci_cd!=(iconv_t)-1)iconv_close(eci_cd);
+#endif
       }
     }
+#ifdef USE_ICONV
     if(eci_cd!=(iconv_t)-1)iconv_close(eci_cd);
+#endif
     if(!err){
       zbar_symbol_t *sa_sym;
       sa_text[sa_ntext++]='\0';
@@ -424,9 +444,11 @@ int qr_code_data_list_extract_text(const qr_code_data_list *_qrlist,
         free(sa_text);
     }
   }
+#ifdef USE_ICONV
   if(utf8_cd!=(iconv_t)-1)iconv_close(utf8_cd);
   if(sjis_cd!=(iconv_t)-1)iconv_close(sjis_cd);
   if(latin1_cd!=(iconv_t)-1)iconv_close(latin1_cd);
+#endif
   free(mark);
   return ntext;
 }
