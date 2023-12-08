@@ -4,6 +4,9 @@
 /* whether to build support for Code 128 symbology */
 #undef ENABLE_CODE128
 
+/* whether to build support for Code 93 symbology */
+#undef ENABLE_CODE93
+
 /* whether to build support for Code 39 symbology */
 #undef ENABLE_CODE39
 
@@ -13,8 +16,14 @@
 /* whether to build support for Interleaved 2 of 5 symbology */
 #undef ENABLE_I25
 
+/* whether to build support for Codabar symbology */
+#undef ENABLE_CODABAR
+
+/* whether to build support for DataBar symbology */
+#undef ENABLE_DATABAR
+
 /* whether to build support for PDF417 symbology */
-/* #undef ENABLE_PDF417 */
+#undef ENABLE_PDF417
 
 /* whether to build support for QR Code */
 #define ENABLE_QRCODE 1
@@ -134,6 +143,8 @@
 
 /* Define as const if the declaration of iconv() needs const. */
 #define ICONV_CONST
+
+#define NO_STATS
 
 /* Library major version */
 #define LIB_VERSION_MAJOR 0
